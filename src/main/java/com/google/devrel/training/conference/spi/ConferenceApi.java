@@ -19,10 +19,13 @@ import com.google.api.server.spi.response.ConflictException;
 import com.google.api.server.spi.response.ForbiddenException;
 import com.google.api.server.spi.response.NotFoundException;
 import com.google.api.server.spi.response.UnauthorizedException;
+import com.google.appengine.api.memcache.MemcacheService;
+import com.google.appengine.api.memcache.MemcacheServiceFactory;
 import com.google.appengine.api.search.query.QueryParser.primitive_return;
 import com.google.appengine.api.users.User;
 import com.google.appengine.repackaged.org.apache.commons.logging.impl.Log4JLogger;
 import com.google.devrel.training.conference.Constants;
+import com.google.devrel.training.conference.domain.Announcement;
 import com.google.devrel.training.conference.domain.Conference;
 import com.google.devrel.training.conference.domain.Profile;
 import com.google.devrel.training.conference.form.ConferenceForm;
@@ -483,5 +486,19 @@ public WrappedBoolean unregisterFromConference(final User user,
         	conferences.add((Conference) ofy().load().key(Key.create(keyString)).now());
 
         return conferences;  // change this
+    }
+    
+    @ApiMethod(
+    		name = "getAnnouncement",
+    		path = "announcement",
+    		httpMethod = HttpMethod.GET)
+    public Announcement getAnnouncement() {
+            // Get the Memcache Service
+            MemcacheService memcacheService =
+                 MemcacheServiceFactory.getMemcacheService();
+            String announcementString = (String) memcacheService.get(Constants.MEMCACHE_ANNOUNCEMENTS_KEY);
+            if (announcementString != null)
+            	return new Announcement(announcementString);
+		return null;
     }
 }
