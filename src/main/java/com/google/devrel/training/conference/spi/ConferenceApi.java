@@ -37,6 +37,9 @@ import com.googlecode.objectify.Key;
 import com.googlecode.objectify.Objectify;
 import com.googlecode.objectify.Work;
 import com.googlecode.objectify.cmd.Query;
+import com.google.appengine.api.taskqueue.Queue;
+import com.google.appengine.api.taskqueue.QueueFactory;
+import com.google.appengine.api.taskqueue.TaskOptions;
 
 /**
  * Defines conference APIs.
@@ -179,7 +182,10 @@ public class ConferenceApi {
 
         // Save Conference and Profile Entities
         ofy().save().entities(profile, conference).now();
-         
+        Queue queue = QueueFactory.getQueue("email-queue");
+        queue.add(TaskOptions.Builder.withUrl("/tasks/send_confirmation_email")
+        		.param("email", user.getEmail())
+        		.param("conferenceInfo", conferenceForm.getName()));
 
          return conference;
     }
